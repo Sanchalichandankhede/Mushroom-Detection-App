@@ -17,6 +17,7 @@ class _RegisterFormState extends State<RegisterForm> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -25,6 +26,7 @@ class _RegisterFormState extends State<RegisterForm> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -32,6 +34,13 @@ class _RegisterFormState extends State<RegisterForm> {
     if (_nameController.text.isEmpty || _emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all fields'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match'), backgroundColor: Colors.red),
       );
       return;
     }
@@ -68,6 +77,20 @@ class _RegisterFormState extends State<RegisterForm> {
     }
   }
 
+  Future<void> _signInWithGoogle() async {
+    try {
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google Sign-In failed'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -81,6 +104,44 @@ class _RegisterFormState extends State<RegisterForm> {
         Text(
           'Create your mycological profile.',
           style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 32),
+        Row(
+          children: [
+            Expanded(
+              child: _buildSocialButton(
+                icon: LucideIcons.chrome,
+                label: 'Google',
+                onTap: _signInWithGoogle,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildSocialButton(
+                icon: LucideIcons.apple,
+                label: 'Apple',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 32),
+        Row(
+          children: [
+            const Expanded(child: Divider()),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                'OR EMAIL',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textMuted,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+            const Expanded(child: Divider()),
+          ],
         ),
         const SizedBox(height: 32),
         
@@ -124,6 +185,19 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
               onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
             ),
+            hintText: '••••••••',
+            hintStyle: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.5)),
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        _buildFieldLabel('CONFIRM PASSWORD'),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _confirmPasswordController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            prefixIcon: const Icon(LucideIcons.checkCircle, size: 20),
             hintText: '••••••••',
             hintStyle: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.5)),
           ),
@@ -207,6 +281,33 @@ class _RegisterFormState extends State<RegisterForm> {
         fontWeight: FontWeight.bold,
         color: AppColors.textHeadline,
         letterSpacing: 0.5,
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({required IconData icon, required String label, VoidCallback? onTap}) {
+    return BouncingWidget(
+      onPress: onTap ?? () {},
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF2F2F7),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20, color: AppColors.textHeadline),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textHeadline,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

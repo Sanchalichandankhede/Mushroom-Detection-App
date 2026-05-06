@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -35,7 +36,7 @@ class _LoginFormState extends State<LoginForm> {
         password: _passwordController.text.trim(),
       );
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/scan');
+        Navigator.pushReplacementNamed(context, '/dashboard');
       }
     } on AuthException catch (error) {
       if (mounted) {
@@ -241,15 +242,14 @@ class _LoginFormState extends State<LoginForm> {
               ),
               children: [
                 const TextSpan(text: 'New to the field guide? '),
-                GestureDetector(
-                  onTap: () => Navigator.pushNamed(context, '/register'),
-                  child: TextSpan(
-                    text: 'Create an account',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                TextSpan(
+                  text: 'Create an account',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
                   ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () => Navigator.pushNamed(context, '/register'),
                 ),
               ],
             ),
