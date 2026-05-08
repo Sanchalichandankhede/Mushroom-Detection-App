@@ -3,116 +3,133 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../widgets/chat_bubble.dart';
+import '../widgets/chat_input.dart';
+import '../widgets/quick_actions.dart';
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
+
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
+  final List<Map<String, dynamic>> _messages = [
+    {
+      'isUser': false,
+      'text': 'Hello! I am your Mushroom Expert AI. 🍄\n\nHow can I help you today? I can provide recipes, identify harmful types, or give medical consultancy regarding fungi.',
+      'time': '09:00 AM'
+    },
+  ];
+
+  final ScrollController _scrollController = ScrollController();
+
+  void _handleSendMessage(String text) {
+    setState(() {
+      _messages.add({
+        'isUser': true,
+        'text': text,
+        'time': '09:01 AM',
+      });
+    });
+    
+    // Mock AI response
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          _messages.add({
+            'isUser': false,
+            'text': 'I am currently processing your request about "$text". This feature will be fully connected to our trained model soon!',
+            'time': '09:01 AM',
+          });
+        });
+        _scrollToBottom();
+      }
+    });
+    _scrollToBottom();
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
-        title: Text(
-          'Community',
-          style: GoogleFonts.outfit(
-            color: AppColors.textHeadline,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(LucideIcons.bot, color: AppColors.primary, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Mushroom Expert',
+                  style: GoogleFonts.outfit(
+                    color: AppColors.textHeadline,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  'Online AI Assistant',
+                  style: GoogleFonts.outfit(
+                    color: Colors.green,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.search, color: AppColors.textHeadline),
+            icon: const Icon(LucideIcons.info, color: AppColors.textMuted, size: 20),
             onPressed: () {},
           ),
         ],
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(24),
-        itemCount: 5,
-        separatorBuilder: (context, index) => const SizedBox(height: 16),
-        itemBuilder: (context, index) {
-          return _buildChatItem(index);
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primary,
-        child: const Icon(LucideIcons.messageSquarePlus, color: Colors.white),
-        onPressed: () {},
-      ),
-    );
-  }
-
-  Widget _buildChatItem(int index) {
-    final names = ['Dr. Mycelium', 'Forest Forager', 'Mushroom Fan', 'Expert Shroom', 'Nature Lover'];
-    final messages = [
-      'That looks like a Chanterelle!',
-      'Where did you find this specimen?',
-      'Check out my latest discovery!',
-      'The gills suggest it\'s edible.',
-      'Happy foraging everyone!'
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
+      body: Column(
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-            child: Icon(LucideIcons.user, color: AppColors.primary),
-          ),
-          const SizedBox(width: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      names[index],
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      '12:45 PM',
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  messages[index],
-                  style: GoogleFonts.outfit(
-                    color: AppColors.textBody,
-                    fontSize: 14,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(20),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                return ChatBubble(
+                  message: _messages[index]['text'],
+                  isUser: _messages[index]['isUser'],
+                  time: _messages[index]['time'],
+                );
+              },
             ),
           ),
+          const QuickActions(),
+          ChatInput(onSend: _handleSendMessage),
         ],
       ),
-    ).animate().fadeIn(delay: (index * 100).ms).slideX(begin: 0.1, end: 0);
+    );
   }
 }

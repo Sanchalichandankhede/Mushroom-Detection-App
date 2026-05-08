@@ -1,12 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/config/api_config.dart';
 import '../widgets/scan_box.dart';
 import '../widgets/scan_action_button.dart';
+import '../widgets/recent_scans_section.dart';
 
-class MushroomScanPage extends StatelessWidget {
+class MushroomScanPage extends StatefulWidget {
   const MushroomScanPage({super.key});
+
+  @override
+  State<MushroomScanPage> createState() => _MushroomScanPageState();
+}
+
+class _MushroomScanPageState extends State<MushroomScanPage> {
+  List _recentScans = [];
+  bool _isLoadingScans = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecentScans();
+  }
+
+  Future<void> _fetchRecentScans() async {
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      final response = await http.get(
+        Uri.parse(ApiConfig.getUrl('/api/identify/history')),
+        headers: {'Authorization': 'Bearer ${session?.accessToken}'},
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _recentScans = jsonDecode(response.body);
+          _isLoadingScans = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching scans: $e');
+      if (mounted) setState(() => _isLoadingScans = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,18 +54,26 @@ class MushroomScanPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _ScanHeader(),
+            const _ScanHeader(),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 24.0),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const ScanBox(),
-                    const SizedBox(height: 48),
-                    _ScanInstructions(),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.0),
+                      child: ScanBox(),
+                    ),
                     const SizedBox(height: 32),
-                    ScanActionButton(onTap: () {}),
+                    const _ScanInstructions(),
+                    const SizedBox(height: 24),
+                    ScanActionButton(onTap: () {
+                      // Future: Implementation of actual scan trigger
+                    }),
+                    const SizedBox(height: 48),
+                    _isLoadingScans 
+                      ? const CircularProgressIndicator()
+                      : RecentScansSection(scans: _recentScans),
                   ],
                 ),
               ),
@@ -39,6 +86,7 @@ class MushroomScanPage extends StatelessWidget {
 }
 
 class _ScanHeader extends StatelessWidget {
+  const _ScanHeader();
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -56,7 +104,10 @@ class _ScanHeader extends StatelessWidget {
           const Spacer(),
           IconButton(
             icon: const Icon(LucideIcons.history),
-            onPressed: () {},
+            onPressed: () {
+              // Navigation to full history page
+              Navigator.pushNamed(context, '/profile/history');
+            },
           ),
         ],
       ),
@@ -65,6 +116,7 @@ class _ScanHeader extends StatelessWidget {
 }
 
 class _ScanInstructions extends StatelessWidget {
+  const _ScanInstructions();
   @override
   Widget build(BuildContext context) {
     return Column(

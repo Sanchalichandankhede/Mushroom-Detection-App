@@ -4,6 +4,11 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
+import 'personal_info_page.dart';
+import 'my_listings_page.dart';
+import 'identification_history_page.dart';
+import 'notifications_page.dart';
+import 'privacy_policy_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -59,13 +64,33 @@ class ProfilePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionHeader('Account Settings'),
-                  _buildSettingTile(LucideIcons.user, 'Personal Information'),
-                  _buildSettingTile(LucideIcons.shoppingBag, 'My Listings'),
-                  _buildSettingTile(LucideIcons.history, 'Identification History'),
+                  _buildSettingTile(
+                    LucideIcons.user,
+                    'Personal Information',
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalInfoPage())),
+                  ),
+                  _buildSettingTile(
+                    LucideIcons.shoppingBag,
+                    'My Listings',
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MyListingsPage())),
+                  ),
+                  _buildSettingTile(
+                    LucideIcons.history,
+                    'Identification History',
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => const IdentificationHistoryPage())),
+                  ),
                   const SizedBox(height: 32),
                   _buildSectionHeader('Preferences'),
-                  _buildSettingTile(LucideIcons.bell, 'Notifications'),
-                  _buildSettingTile(LucideIcons.shield, 'Privacy & Safety'),
+                  _buildSettingTile(
+                    LucideIcons.bell,
+                    'Notifications',
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsPage())),
+                  ),
+                  _buildSettingTile(
+                    LucideIcons.shield,
+                    'Privacy & Safety',
+                    () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyPolicyPage())),
+                  ),
                   const SizedBox(height: 32),
                   _buildLogoutButton(context),
                   const SizedBox(height: 100),
@@ -93,7 +118,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingTile(IconData icon, String title) {
+  Widget _buildSettingTile(IconData icon, String title, VoidCallback onTap) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -117,7 +142,7 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
         trailing: const Icon(LucideIcons.chevronRight, size: 18),
-        onTap: () {},
+        onTap: onTap,
       ),
     ).animate().fadeIn().slideX(begin: 0.1, end: 0);
   }
