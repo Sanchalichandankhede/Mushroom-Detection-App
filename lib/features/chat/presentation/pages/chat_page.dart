@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/config/api_config.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/chat_input.dart';
@@ -19,35 +24,89 @@ class _ChatPageState extends State<ChatPage> {
     {
       'isUser': false,
       'text': 'Hello! I am your Mushroom Expert AI. 🍄\n\nHow can I help you today? I can provide recipes, identify harmful types, or give medical consultancy regarding fungi.',
-      'time': '09:00 AM'
+      'time': DateFormat('hh:mm a').format(DateTime.now()),
     },
   ];
 
   final ScrollController _scrollController = ScrollController();
+  bool _isLoading = false;
 
-  void _handleSendMessage(String text) {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Future<void> _handleSendMessage(String text) async {
+    if (text.trim().isEmpty) return;
+
+    final userMessage = {
+      'isUser': true,
+      'text': text,
+      'time': DateFormat('hh:mm a').format(DateTime.now()),
+    };
+
     setState(() {
-      _messages.add({
-        'isUser': true,
-        'text': text,
-        'time': '09:01 AM',
-      });
+      _messages.add(userMessage);
+      _isLoading = true;
     });
     
-    // Mock AI response
-    Future.delayed(const Duration(seconds: 1), () {
+    _scrollToBottom();
+
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session == null) throw Exception("User not authenticated");
+
+      // Prepare history for backend
+      final history = _messages.skip(1).take(_messages.length - 2).map((msg) {
+        return {
+          'role': msg['isUser'] == true ? 'user' : 'model',
+          'text': msg['text'],
+        };
+      }).toList();
+
+      final response = await http.post(
+        Uri.parse(ApiConfig.getUrl('/api/chat/')),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${session.accessToken}',
+        },
+        body: jsonEncode({
+          'message': text,
+          'history': history,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final aiText = data['response'] ?? 'I am sorry, I could not process that request.';
+
+        if (mounted) {
+          setState(() {
+            _messages.add({
+              'isUser': false,
+              'text': aiText,
+              'time': DateFormat('hh:mm a').format(DateTime.now()),
+            });
+            _isLoading = false;
+          });
+          _scrollToBottom();
+        }
+      } else {
+        throw Exception("Server returned ${response.statusCode}");
+      }
+    } catch (e) {
       if (mounted) {
         setState(() {
           _messages.add({
             'isUser': false,
-            'text': 'I am currently processing your request about "$text". This feature will be fully connected to our trained model soon!',
-            'time': '09:01 AM',
+            'text': 'Sorry, I encountered an error. Please check your connection and try again.',
+            'time': DateFormat('hh:mm a').format(DateTime.now()),
           });
+          _isLoading = false;
         });
         _scrollToBottom();
       }
-    });
-    _scrollToBottom();
+    }
   }
 
   void _scrollToBottom() {
@@ -127,6 +186,18 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
           const QuickActions(),
+          if (_isLoading)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Mushroom Expert is thinking...',
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  color: AppColors.textMuted,
+                  fontStyle: FontStyle.italic,
+                ),
+              ).animate().fade().scale(),
+            ),
           ChatInput(onSend: _handleSendMessage),
         ],
       ),
