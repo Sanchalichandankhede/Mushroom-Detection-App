@@ -14,6 +14,15 @@ class ChatBubble extends StatelessWidget {
     required this.time,
   });
 
+  String _getCleanText(String text) {
+    return text
+        .replaceAll(RegExp(r'\*\*'), '') // Remove bold asterisks
+        .replaceAll(RegExp(r'\*'), '')   // Remove italic asterisks
+        .replaceAll(RegExp(r'#+\s*'), '') // Remove header hashtags (e.g. ###)
+        .replaceAll(RegExp(r'---\s*'), '') // Remove horizontal line markers
+        .trim();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -41,7 +50,7 @@ class ChatBubble extends StatelessWidget {
               ],
             ),
             child: Text(
-              message,
+              _getCleanText(message),
               style: GoogleFonts.outfit(
                 color: isUser ? Colors.white : AppColors.textHeadline,
                 fontSize: 15,

@@ -61,7 +61,7 @@ class _LoginFormState extends State<LoginForm> {
     try {
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
-        // redirectTo: 'io.supabase.flutter://login-callback', // Configure in dashboard
+        redirectTo: 'io.supabase.flutter://login-callback',
       );
     } catch (error) {
       if (mounted) {

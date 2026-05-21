@@ -26,6 +26,9 @@ class ApiConfig {
 
   /// Helper to generate full API URLs
   static String getUrl(String endpoint) {
+    if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+      return endpoint;
+    }
     // Ensure endpoint doesn't have double slashes
     final cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/$endpoint';
     return '$baseUrl$cleanEndpoint';

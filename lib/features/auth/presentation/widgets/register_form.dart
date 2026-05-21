@@ -81,6 +81,7 @@ class _RegisterFormState extends State<RegisterForm> {
     try {
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
+        redirectTo: 'io.supabase.flutter://login-callback',
       );
     } catch (error) {
       if (mounted) {

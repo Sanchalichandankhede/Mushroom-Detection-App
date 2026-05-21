@@ -4,15 +4,33 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class QuickActions extends StatelessWidget {
-  const QuickActions({super.key});
+  final ValueChanged<String> onTap;
+
+  const QuickActions({super.key, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final actions = [
-      {'icon': LucideIcons.utensils, 'label': 'Recipes'},
-      {'icon': LucideIcons.skull, 'label': 'Toxic Check'},
-      {'icon': LucideIcons.sprout, 'label': 'Growing Tips'},
-      {'icon': LucideIcons.heartPulse, 'label': 'Medical Use'},
+      {
+        'icon': LucideIcons.utensils,
+        'label': 'Recipes',
+        'prompt': 'Give me some delicious mushroom-based recipes',
+      },
+      {
+        'icon': LucideIcons.skull,
+        'label': 'Toxic Check',
+        'prompt': 'How can I check if a mushroom is toxic and what safety precautions should I take?',
+      },
+      {
+        'icon': LucideIcons.sprout,
+        'label': 'Growing Tips',
+        'prompt': 'Can you give me some tips for growing mushrooms at home?',
+      },
+      {
+        'icon': LucideIcons.heartPulse,
+        'label': 'Medical Use',
+        'prompt': 'What are the medicinal benefits and health properties of mushrooms?',
+      },
     ];
 
     return Container(
@@ -39,7 +57,7 @@ class QuickActions extends StatelessWidget {
               backgroundColor: Colors.white,
               side: BorderSide(color: Colors.grey[200]!),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              onPressed: () {},
+              onPressed: () => onTap(action['prompt'] as String),
             ),
           );
         },

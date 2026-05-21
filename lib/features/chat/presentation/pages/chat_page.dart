@@ -185,7 +185,7 @@ class _ChatPageState extends State<ChatPage> {
               },
             ),
           ),
-          const QuickActions(),
+          QuickActions(onTap: _handleSendMessage),
           if (_isLoading)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
